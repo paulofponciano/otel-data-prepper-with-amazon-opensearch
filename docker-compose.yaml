@@ -1,0 +1,25 @@
+version: '3'
+services:
+  data-prepper:
+    container_name: data-prepper
+    restart: unless-stopped  
+    image: opensearchproject/data-prepper:2.0.1
+    volumes:
+      - ./data-prepper-config.yaml:/usr/share/data-prepper/config/data-prepper-config.yaml
+      - ./pipelines.yaml:/usr/share/data-prepper/pipelines/pipelines.yaml
+    ports:
+      - 2021:2021
+      - 21890:21890
+
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    restart: unless-stopped
+    command: [ "--config=/etc/otel-collector-config.yaml" ]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "55680:55680"        # OTLP gRPC receiver
+      - "4318:4318"        # OTLP HTTP receiver
+      - "55670:55679" # zpages extension
+    depends_on:
+      - data-prepper
